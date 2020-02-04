@@ -27,7 +27,7 @@ func main() {
 	today := time.Now()
 
 	solarSystem.InitialDate = Core.Date(today.Year(), int(today.Month()), today.Day())
-	solarSystem.Wheather = []Core.DayWheather{}
+	solarSystem.Wheather = &Core.DaysWheather{}
 	solarSystem.Ferenginar = &Core.Planet{DegreesPerDay: 1, SunDistance: 500, InitialDegrees: 90, Clockwise: true}
 	solarSystem.Betazed = &Core.Planet{DegreesPerDay: 3, SunDistance: 2000, InitialDegrees: 90, Clockwise: true}
 	solarSystem.Vulcano = &Core.Planet{DegreesPerDay: 5, SunDistance: 1000, InitialDegrees: 90, Clockwise: false}
@@ -36,10 +36,10 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeLink).Methods("GET")
-	router.HandleFunc("/day/{day}", getOneDay).Methods("GET")
-	router.HandleFunc("/date/{date}", getOneDate).Methods("GET")
-	router.HandleFunc("/all", getAllDays).Methods("GET")
-	router.HandleFunc("/wheather/{wheather}", getAllDaysByWheather).Methods("GET")
+	router.HandleFunc("/wheather/day/{day}", getOneDay).Methods("GET")
+	router.HandleFunc("/wheather/date/{date}", getOneDate).Methods("GET")
+	router.HandleFunc("/wheather/{wheatherType}", getAllDaysByWheather).Methods("GET")
+	router.HandleFunc("/wheather/allDays", getAllDays).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 func getOneDay(w http.ResponseWriter, r *http.Request) {
@@ -77,14 +77,16 @@ func getAllDays(w http.ResponseWriter, r *http.Request) {
 
 func getAllDaysByWheather(w http.ResponseWriter, r *http.Request) {
 
-	wheatherIn := mux.Vars(r)["wheather"]
+	wheatherIn := mux.Vars(r)["wheatherType"]
 	s := "^[[s|S]torm|[n|N]ormal|[d|D]rought|[r|R]ainy|[o|O]ptimum]$"
 	re := regexp.MustCompile(s)
 
 	if re.MatchString(wheatherIn) {
 
 		var daysByWheather = Core.DaysWheather{}
-		for _, wd := range solarSystem.Wheather {
+		all := *solarSystem.Wheather
+
+		for _, wd := range all {
 			if string(wd.Wheather) == wheatherIn {
 				daysByWheather = append(daysByWheather, wd)
 			}

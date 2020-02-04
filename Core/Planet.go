@@ -11,7 +11,7 @@ type Planet struct {
 	Clockwise      bool
 }
 
-func (p Planet) PlanetPositionByDate(t int) Coordinates {
+func (p *Planet) PlanetPositionByDate(t int) Coordinates {
 
 	var x float64
 	var y float64
@@ -31,7 +31,7 @@ func (p Planet) PlanetPositionByDate(t int) Coordinates {
 
 // Calculo de la Velocidad Angular.
 // Como entrada requiere lo grados por dia que recorre el planet en cuestion.
-func (p Planet) CalcAngularVelocity() float64 {
+func (p *Planet) CalcAngularVelocity() float64 {
 	// Calculo de dias que tarda el planeta en dar una vuelta completa.
 	var t = float64(360 / p.DegreesPerDay)
 

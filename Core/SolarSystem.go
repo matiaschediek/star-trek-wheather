@@ -19,7 +19,7 @@ type SolarSystem struct {
 	Ferenginar   *Planet
 	Betazed      *Planet
 	InitialDate  time.Time
-	Wheather     DaysWheather
+	Wheather     *DaysWheather
 	maxPerimeter float64
 }
 
@@ -34,7 +34,7 @@ type DayWheather struct {
 	Perimeter  float64     `json:"-"`
 }
 
-func (s SolarSystem) CalcWheatherByDate(day int) DayWheather {
+func (s *SolarSystem) CalcWheatherByDate(day int) DayWheather {
 
 	var dayWheather DayWheather = DayWheather{}
 
@@ -102,7 +102,7 @@ func (s SolarSystem) CalcWheatherByDate(day int) DayWheather {
 	return dayWheather
 
 }
-func (s SolarSystem) CalcTenYearWheather() {
+func (s *SolarSystem) CalcTenYearWheather() {
 
 	rainyDays := DaysWheather{}
 	otherDays := DaysWheather{}
@@ -131,12 +131,12 @@ func (s SolarSystem) CalcTenYearWheather() {
 	sort.Slice(allDays[:], func(i, j int) bool {
 		return allDays[i].Day < allDays[j].Day
 	})
-	s.Wheather = allDays
+	s.Wheather = &allDays
 }
 
-func (s SolarSystem) GetWheatherByDate(days int) DayWheather {
-
-	for _, w := range s.Wheather {
+func (s *SolarSystem) GetWheatherByDate(days int) DayWheather {
+	all := *s.Wheather
+	for _, w := range all {
 		if w.Day == days {
 			return w
 		}
@@ -153,10 +153,11 @@ func (s SolarSystem) GetWheatherByDate(days int) DayWheather {
 	d10 := int(math.Round(y10.Sub(s.InitialDate).Hours() / 24))
 
 	if d10 > days || d10 < 0 {
-		s.Wheather = append(s.Wheather, w)
-		sort.Slice(s.Wheather[:], func(i, j int) bool {
-			return s.Wheather[i].Day < s.Wheather[j].Day
+		all = append(all, w)
+		sort.Slice(all[:], func(i, j int) bool {
+			return all[i].Day < all[j].Day
 		})
+		*s.Wheather = all
 	}
 
 	return w
