@@ -32,13 +32,9 @@ func CalcTriangleArea(a, b, c Coordinates) float64 {
 
 	// Calculo el area del Triangulo formado las coordenas (x,y) de los puntos a, b y c
 	// Este es el calculo por determinante
-	area := ((a.X * b.Y) + (a.Y * c.X) + (b.X * c.Y) - (b.Y * c.X) - (a.Y * b.X) - (a.X * c.Y))
-
 	// Depende del orden en que se agreguen los puntos este valor puede ser negativo por esta
 	// razon necesito el modulo de ese valor
-	if area < 0 {
-		area = area * -1
-	}
+	area := math.Abs((a.X * b.Y) + (a.Y * c.X) + (b.X * c.Y) - (b.Y * c.X) - (a.Y * b.X) - (a.X * c.Y))
 
 	// Luego del calculo del determinante se divide por dos para obtener el area
 	return (area / 2)

@@ -10,7 +10,6 @@ const (
 	Normal  string = "Normal"
 	Drought string = "Drought"
 	Rainy   string = "Rainy"
-	Storm   string = "Storm"
 	Optimum string = "Optimum"
 )
 
@@ -32,6 +31,7 @@ type DayWheather struct {
 	Ferenginar Coordinates `json:"-"`
 	Betazed    Coordinates `json:"-"`
 	Perimeter  float64     `json:"-"`
+	IsStorm    bool        `json:"-"`
 }
 
 func (s *SolarSystem) CalcWheatherByDate(day int) DayWheather {
@@ -102,6 +102,7 @@ func (s *SolarSystem) CalcWheatherByDate(day int) DayWheather {
 	return dayWheather
 
 }
+
 func (s *SolarSystem) CalcTenYearWheather() {
 
 	rainyDays := DaysWheather{}
@@ -113,7 +114,7 @@ func (s *SolarSystem) CalcTenYearWheather() {
 
 	for index := 0; index < days; index++ {
 
-		dw := s.CalcWheatherByDate(index)
+		dw := s.GetWheatherByDate(index)
 		if dw.Wheather == Rainy {
 			rainyDays = append(rainyDays, dw)
 		} else {
@@ -123,7 +124,7 @@ func (s *SolarSystem) CalcTenYearWheather() {
 
 	for i, w := range rainyDays {
 		if w.Perimeter == s.maxPerimeter {
-			rainyDays[i].Wheather = Storm
+			rainyDays[i].IsStorm = true
 		}
 	}
 
@@ -145,7 +146,13 @@ func (s *SolarSystem) GetWheatherByDate(days int) DayWheather {
 	w := s.CalcWheatherByDate(days)
 
 	if w.Perimeter > s.maxPerimeter {
-		w.Wheather = Storm
+		w.IsStorm = true
+
+		for _, item := range all {
+			if item.IsStorm {
+				item.IsStorm = false
+			}
+		}
 	}
 
 	y10 := s.InitialDate.AddDate(10, 0, 0)
