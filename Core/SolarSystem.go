@@ -164,7 +164,7 @@ func (s *SolarSystem) GetWheatherByDate(days int) DayWheather {
 		sort.Slice(all[:], func(i, j int) bool {
 			return all[i].Day < all[j].Day
 		})
-		*s.Wheather = all
+		s.Wheather = &all
 	}
 
 	return w
