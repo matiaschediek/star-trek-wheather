@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"os"
@@ -95,8 +96,17 @@ func main() {
 	router.HandleFunc("/wheather/type/{wheatherType}", getAllDaysByWheather).Methods("GET")
 	router.HandleFunc("/wheather/range/{from}/{to}", getRange).Methods("GET")
 	router.HandleFunc("/wheather/all", getAllDays).Methods("GET")
-	http.ListenAndServe(":8080", router)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
+	log.Printf("Listening on port %s", port)
+
+	if err := http.ListenAndServe(":"+port, router); err != nil {
+		log.Fatal(err)
+	}
 }
 func getOneDay(w http.ResponseWriter, r *http.Request) {
 
