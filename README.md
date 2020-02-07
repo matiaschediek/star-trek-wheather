@@ -111,7 +111,8 @@ http://localhost:8080/wheather/type/Normal
 
 ```json
 {
-    "Total":5,
+    "Total":1813,
+    "Periods":61,
     "Days":[
         {
             "Wheather":"Normal",
@@ -141,6 +142,7 @@ http://localhost:8080/wheather/type/Rainy
 ```json
 {
     "Total":1842,
+    "Periods":60,
     "GreaterIntensity":3,
     "GreaterIntensityDays":
     [

@@ -55,9 +55,15 @@ type ResponseRange struct {
 	Total int               `json:"Total"`
 	Days  Core.DaysWheather `json:"Days"`
 }
+type ResponseWheatherType struct {
+	Total   int               `json:"Total"`
+	Periods int               `json:"Periods"`
+	Days    Core.DaysWheather `json:"Days"`
+}
 
 type ResponseRainy struct {
 	Total                int               `json:"Total"`
+	Periods              int               `json:"Periods"`
 	GreaterIntensity     int               `json:"GreaterIntensity"`
 	GreaterIntensityDays Core.DaysWheather `json:"GreaterIntensityDays"`
 	Days                 Core.DaysWheather `json:"Days"`
@@ -65,23 +71,23 @@ type ResponseRainy struct {
 
 func main() {
 
-	solarSystem.Wheather = new(Core.DaysWheather)
+	solarSystem.Wheather = Core.DaysWheather{}
 
 	today := time.Now()
 
 	solarSystem.InitialDate = GetEnviromentVariableDate("SOLAR_SYSTEM_INITIAL_DATE", Core.Date(today.Year(), int(today.Month()), today.Day()))
 
-	solarSystem.Ferenginar = &Core.Planet{
+	solarSystem.Ferenginar = Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("FERENGINAR_DEGREES_PER_DAY", 1),
 		SunDistance:    GetEnviromentVariableFloat("FERENGINAR_SUN_DISTANCE", 500),
 		InitialDegrees: GetEnviromentVariableFloat("FERENGINAR_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("FERENGINAR_CLOCKWISE", true)}
-	solarSystem.Betazed = &Core.Planet{
+	solarSystem.Betazed = Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("BETAZED_DEGREES_PER_DAY", 3),
 		SunDistance:    GetEnviromentVariableFloat("BETAZED_SUN_DISTANCE", 2000),
 		InitialDegrees: GetEnviromentVariableFloat("BETAZED_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("BETAZED_CLOCKWISE", true)}
-	solarSystem.Vulcano = &Core.Planet{
+	solarSystem.Vulcano = Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("VULCANO_DEGREES_PER_DAY", 5),
 		SunDistance:    GetEnviromentVariableFloat("VULCANO_SUN_DISTANCE", 1000),
 		InitialDegrees: GetEnviromentVariableFloat("VULCANO_INITIAL_DEGREES", 90),
@@ -141,7 +147,7 @@ func getOneDate(w http.ResponseWriter, r *http.Request) {
 
 func getAllDays(w http.ResponseWriter, r *http.Request) {
 
-	responseRange := ResponseRange{Total: len(*solarSystem.Wheather), Days: *solarSystem.Wheather}
+	responseRange := ResponseRange{Total: len(solarSystem.Wheather), Days: solarSystem.Wheather}
 	json.NewEncoder(w).Encode(responseRange)
 }
 
@@ -156,7 +162,6 @@ func getRange(w http.ResponseWriter, r *http.Request) {
 	} else {
 
 		dayRange := Core.DaysWheather{}
-		all := *solarSystem.Wheather
 
 		var totalRange int
 		// Si ingresan negativo en from
@@ -181,7 +186,7 @@ func getRange(w http.ResponseWriter, r *http.Request) {
 		j := from
 		for i := 0; i < totalRange+1; i++ {
 			found := false
-			for _, wd := range all {
+			for _, wd := range solarSystem.Wheather {
 				if wd.Day == j {
 					dayRange = append(dayRange, wd)
 					found = true
@@ -204,7 +209,7 @@ func getAllDaysByWheather(w http.ResponseWriter, r *http.Request) {
 
 	wheatherIn := mux.Vars(r)["wheatherType"]
 
-	s := "^[[n|N][o|O][r|R][m|M][a|A][l|L]|[d|D][r|R][o|O][u|U][g|G][h|H][t|T]|[r|R][a|A][i|I][n|N][y|Y]|[o|O][p|P][t|T][i|I][m|M][u|U][m|M]]$"
+	s := "^([n|N][o|O][r|R][m|M][a|A][l|L]|[d|D][r|R][o|O][u|U][g|G][h|H][t|T]|[o|O][p|P][t|T][i|I][m|M][u|U][m|M]|[r|R][a|A][i|I][n|N][y|Y])$"
 	re := regexp.MustCompile(s)
 
 	if re.MatchString(wheatherIn) {
@@ -212,26 +217,36 @@ func getAllDaysByWheather(w http.ResponseWriter, r *http.Request) {
 
 		var daysByWheather = Core.DaysWheather{}
 
-		all := *solarSystem.Wheather
+		all := solarSystem.Wheather
+		var aux int
+		periodCount := 0
+		first := true
+
+		var greaterIntensityDays = Core.DaysWheather{}
 
 		for _, wd := range all {
 			if string(wd.Wheather) == wheatherIn {
+				if first {
+					first = false
+				} else {
+					if wd.Day != (aux + 1) {
+						periodCount++
+					}
+				}
+				aux = wd.Day
 				daysByWheather = append(daysByWheather, wd)
-			}
-		}
 
-		if wheatherIn == "Rainy" {
-			var greaterIntensityDays = Core.DaysWheather{}
-			for _, wd := range daysByWheather {
 				if wd.IsStorm {
 					greaterIntensityDays = append(greaterIntensityDays, wd)
 				}
 			}
-			responseRainy := ResponseRainy{Total: len(daysByWheather), Days: daysByWheather, GreaterIntensity: len(greaterIntensityDays), GreaterIntensityDays: greaterIntensityDays}
+		}
+		if wheatherIn == "Rainy" {
+			responseRainy := ResponseRainy{Periods: periodCount, Total: len(daysByWheather), Days: daysByWheather, GreaterIntensity: len(greaterIntensityDays), GreaterIntensityDays: greaterIntensityDays}
 			json.NewEncoder(w).Encode(responseRainy)
 
 		} else {
-			responseRange := ResponseRange{Total: len(daysByWheather), Days: daysByWheather}
+			responseRange := ResponseWheatherType{Periods: periodCount, Total: len(daysByWheather), Days: daysByWheather}
 			json.NewEncoder(w).Encode(responseRange)
 		}
 
