@@ -202,17 +202,7 @@ func getRange(w http.ResponseWriter, r *http.Request) {
 
 		j := from
 		for i := 0; i < totalRange+1; i++ {
-			found := false
-			for _, wd := range *solarSystem.Wheather {
-				if wd.Day == j {
-					dayRange = append(dayRange, wd)
-					found = true
-					break
-				}
-			}
-			if !found {
-				dayRange = append(dayRange, solarSystem.GetWheatherByDate(j))
-			}
+			dayRange = append(dayRange, solarSystem.GetWheatherByDate(j))
 			j++
 
 		}
@@ -258,6 +248,11 @@ func getAllDaysByWheather(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+
+		if !first {
+			periodCount++
+		}
+
 		if wheatherIn == "Rainy" {
 			responseRainy := ResponseRainy{Periods: periodCount, Total: len(daysByWheather), Days: daysByWheather, GreaterIntensity: len(greaterIntensityDays), GreaterIntensityDays: greaterIntensityDays}
 			json.NewEncoder(w).Encode(responseRainy)
