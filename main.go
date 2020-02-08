@@ -23,6 +23,17 @@ func GetEnviromentVariableFloat(key string, defaultValue float64) float64 {
 	if err != nil {
 		value = defaultValue
 	}
+	log.Printf("%s: %f", key, value)
+	return value
+}
+func GetEnviromentVariableInt(key string, defaultValue int) int {
+
+	valueS := os.Getenv(key)
+	value, err := strconv.Atoi(valueS)
+	if err != nil {
+		value = defaultValue
+	}
+	log.Printf("%s: %d", key, value)
 	return value
 }
 
@@ -35,6 +46,7 @@ func GetEnviromentVariableBool(key string, defaultValue bool) bool {
 		value = defaultValue
 	}
 
+	log.Printf("%s: %t", key, value)
 	return value
 }
 
@@ -46,6 +58,8 @@ func GetEnviromentVariableDate(key string, defaultValue time.Time) time.Time {
 	if err != nil {
 		value = defaultValue
 	}
+
+	log.Printf("%s: %s", key, value.String())
 	return value
 }
 
@@ -71,29 +85,32 @@ type ResponseRainy struct {
 
 func main() {
 
-	solarSystem.Wheather = Core.DaysWheather{}
+	solarSystem.Wheather = &Core.DaysWheather{}
 
 	today := time.Now()
 
 	solarSystem.InitialDate = GetEnviromentVariableDate("SOLAR_SYSTEM_INITIAL_DATE", Core.Date(today.Year(), int(today.Month()), today.Day()))
 
-	solarSystem.Ferenginar = Core.Planet{
+	solarSystem.Ferenginar = &Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("FERENGINAR_DEGREES_PER_DAY", 1),
 		SunDistance:    GetEnviromentVariableFloat("FERENGINAR_SUN_DISTANCE", 500),
 		InitialDegrees: GetEnviromentVariableFloat("FERENGINAR_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("FERENGINAR_CLOCKWISE", true)}
-	solarSystem.Betazed = Core.Planet{
+	solarSystem.Ferenginar.CalcAngularVelocity()
+	solarSystem.Betazed = &Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("BETAZED_DEGREES_PER_DAY", 3),
 		SunDistance:    GetEnviromentVariableFloat("BETAZED_SUN_DISTANCE", 2000),
 		InitialDegrees: GetEnviromentVariableFloat("BETAZED_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("BETAZED_CLOCKWISE", true)}
-	solarSystem.Vulcano = Core.Planet{
+	solarSystem.Betazed.CalcAngularVelocity()
+	solarSystem.Vulcano = &Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("VULCANO_DEGREES_PER_DAY", 5),
 		SunDistance:    GetEnviromentVariableFloat("VULCANO_SUN_DISTANCE", 1000),
 		InitialDegrees: GetEnviromentVariableFloat("VULCANO_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("VULCANO_CLOCKWISE", false)}
+	solarSystem.Vulcano.CalcAngularVelocity()
 
-	solarSystem.CalcTenYearWheather()
+	solarSystem.CalcYearsWheather(GetEnviromentVariableInt("PRE_CALCULATED_YEARS", 10))
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -147,7 +164,7 @@ func getOneDate(w http.ResponseWriter, r *http.Request) {
 
 func getAllDays(w http.ResponseWriter, r *http.Request) {
 
-	responseRange := ResponseRange{Total: len(solarSystem.Wheather), Days: solarSystem.Wheather}
+	responseRange := ResponseRange{Total: len(*solarSystem.Wheather), Days: *solarSystem.Wheather}
 	json.NewEncoder(w).Encode(responseRange)
 }
 
@@ -186,7 +203,7 @@ func getRange(w http.ResponseWriter, r *http.Request) {
 		j := from
 		for i := 0; i < totalRange+1; i++ {
 			found := false
-			for _, wd := range solarSystem.Wheather {
+			for _, wd := range *solarSystem.Wheather {
 				if wd.Day == j {
 					dayRange = append(dayRange, wd)
 					found = true
@@ -217,7 +234,7 @@ func getAllDaysByWheather(w http.ResponseWriter, r *http.Request) {
 
 		var daysByWheather = Core.DaysWheather{}
 
-		all := solarSystem.Wheather
+		all := *solarSystem.Wheather
 		var aux int
 		periodCount := 0
 		first := true
@@ -254,7 +271,6 @@ func getAllDaysByWheather(w http.ResponseWriter, r *http.Request) {
 
 		s := fmt.Sprintf("The value must be one of the following: %s", s)
 		http.Error(w, s, http.StatusBadRequest)
-
 	}
 
 }

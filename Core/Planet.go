@@ -5,10 +5,11 @@ import (
 )
 
 type Planet struct {
-	DegreesPerDay  float64
-	SunDistance    float64
-	InitialDegrees float64
-	Clockwise      bool
+	DegreesPerDay   float64
+	SunDistance     float64
+	InitialDegrees  float64
+	Clockwise       bool
+	AngularVelocity float64
 }
 
 func (p *Planet) PlanetPositionByDate(t int) Coordinates {
@@ -17,12 +18,12 @@ func (p *Planet) PlanetPositionByDate(t int) Coordinates {
 	var y float64
 
 	InitialDegreesRad := DegreesToRadians(p.InitialDegrees)
-	w := p.CalcAngularVelocity()
 
-	rad := (w * float64(t)) + InitialDegreesRad
+	rad := (p.AngularVelocity * float64(t)) + InitialDegreesRad
 
-	x = p.SunDistance * math.Cos(rad)
-	y = p.SunDistance * math.Sin(rad)
+	// Redondeo a 7 decimales
+	x = (math.Round((p.SunDistance*math.Cos(rad))*10000000) / 10000000)
+	y = (math.Round((p.SunDistance*math.Sin(rad))*10000000) / 10000000)
 
 	coordinates := Coordinates{x, y}
 
@@ -31,7 +32,7 @@ func (p *Planet) PlanetPositionByDate(t int) Coordinates {
 
 // Calculo de la Velocidad Angular.
 // Como entrada requiere lo grados por dia que recorre el planet en cuestion.
-func (p *Planet) CalcAngularVelocity() float64 {
+func (p *Planet) CalcAngularVelocity() {
 	// Calculo de dias que tarda el planeta en dar una vuelta completa.
 	var t = float64(360 / p.DegreesPerDay)
 
@@ -42,5 +43,5 @@ func (p *Planet) CalcAngularVelocity() float64 {
 		w = w * (-1)
 	}
 
-	return w
+	p.AngularVelocity = w
 }

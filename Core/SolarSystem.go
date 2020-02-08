@@ -14,18 +14,18 @@ const (
 )
 
 type SolarSystem struct {
-	Vulcano      Planet
-	Ferenginar   Planet
-	Betazed      Planet
+	Vulcano      *Planet
+	Ferenginar   *Planet
+	Betazed      *Planet
 	InitialDate  time.Time
-	Wheather     DaysWheather
+	Wheather     *DaysWheather
 	maxPerimeter float64
 }
 
 type DaysWheather []DayWheather
 
 type DayWheather struct {
-	Wheather   string      `json:"Wheather"`
+	Wheather   string      `json:"wheather"`
 	Day        int         `json:"day"`
 	Vulcano    Coordinates `json:"-"`
 	Ferenginar Coordinates `json:"-"`
@@ -42,7 +42,7 @@ func (s *SolarSystem) CalcWheatherByDate(day int) DayWheather {
 
 	sun := Coordinates{0, 0}
 
-	//Pripero obtengo las coordenadas de los planetas
+	//Primero obtengo las coordenadas de los planetas
 
 	dayWheather.Vulcano = s.Vulcano.PlanetPositionByDate(dayWheather.Day)
 	dayWheather.Ferenginar = s.Ferenginar.PlanetPositionByDate(dayWheather.Day)
@@ -69,8 +69,8 @@ func (s *SolarSystem) CalcWheatherByDate(day int) DayWheather {
 		// Para esto vamos a calcular el area de los triangulos que forman dos de los puntos
 		// por ejemplo a y b con el Sol. Y luego la divido por el area del triangulo de los planetas.
 		// Lo mismo para a,c,sol  b,c,sol.
-		// Si cada divicio  da entre 0 y 1 el sol esta dentro del triangulo o en uno de sus lados
-		// Por el contrario se da mayor que uno el sol esta por fuera del triangulo
+		// Si cada divición  da entre 0 y 1 el sol esta dentro del triangulo o en uno de sus lados
+		// Por el contrario si da mayor que uno el sol esta por fuera del triangulo
 
 		areaAux := CalcTriangleArea(dayWheather.Vulcano, dayWheather.Ferenginar, sun)
 
@@ -103,14 +103,14 @@ func (s *SolarSystem) CalcWheatherByDate(day int) DayWheather {
 
 }
 
-func (s *SolarSystem) CalcTenYearWheather() {
+func (s *SolarSystem) CalcYearsWheather(years int) {
 
 	rainyDays := DaysWheather{}
 	otherDays := DaysWheather{}
 	allDays := DaysWheather{}
-	y10 := s.InitialDate.AddDate(10, 0, 0)
+	y := s.InitialDate.AddDate(years, 0, 0)
 
-	days := int(math.Round(y10.Sub(s.InitialDate).Hours() / 24))
+	days := int(math.Round(y.Sub(s.InitialDate).Hours() / 24))
 
 	for index := 0; index < days; index++ {
 
@@ -132,12 +132,12 @@ func (s *SolarSystem) CalcTenYearWheather() {
 	sort.Slice(allDays[:], func(i, j int) bool {
 		return allDays[i].Day < allDays[j].Day
 	})
-	s.Wheather = allDays
+	s.Wheather = &allDays
 }
 
 func (s *SolarSystem) GetWheatherByDate(days int) DayWheather {
 
-	for _, w := range s.Wheather {
+	for _, w := range *s.Wheather {
 		if w.Day == days {
 			return w
 		}
@@ -148,23 +148,18 @@ func (s *SolarSystem) GetWheatherByDate(days int) DayWheather {
 	if w.Perimeter > s.maxPerimeter {
 		w.IsStorm = true
 
-		for _, item := range s.Wheather {
+		for _, item := range *s.Wheather {
 			if item.IsStorm {
 				item.IsStorm = false
 			}
 		}
 	}
 
-	y10 := s.InitialDate.AddDate(10, 0, 0)
-
-	d10 := int(math.Round(y10.Sub(s.InitialDate).Hours() / 24))
-
-	if d10 > days || d10 < 0 {
-		s.Wheather = append(s.Wheather, w)
-		sort.Slice(s.Wheather[:], func(i, j int) bool {
-			return s.Wheather[i].Day < s.Wheather[j].Day
-		})
-	}
+	allDays := append(*s.Wheather, w)
+	sort.Slice(allDays[:], func(i, j int) bool {
+		return allDays[i].Day < allDays[j].Day
+	})
+	s.Wheather = &allDays
 
 	return w
 }
