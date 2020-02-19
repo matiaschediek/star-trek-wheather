@@ -96,19 +96,18 @@ func main() {
 		SunDistance:    GetEnviromentVariableFloat("FERENGINAR_SUN_DISTANCE", 500),
 		InitialDegrees: GetEnviromentVariableFloat("FERENGINAR_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("FERENGINAR_CLOCKWISE", true)}
-	solarSystem.Ferenginar.CalcAngularVelocity()
+
 	solarSystem.Betazed = &Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("BETAZED_DEGREES_PER_DAY", 3),
 		SunDistance:    GetEnviromentVariableFloat("BETAZED_SUN_DISTANCE", 2000),
 		InitialDegrees: GetEnviromentVariableFloat("BETAZED_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("BETAZED_CLOCKWISE", true)}
-	solarSystem.Betazed.CalcAngularVelocity()
+
 	solarSystem.Vulcano = &Core.Planet{
 		DegreesPerDay:  GetEnviromentVariableFloat("VULCANO_DEGREES_PER_DAY", 5),
 		SunDistance:    GetEnviromentVariableFloat("VULCANO_SUN_DISTANCE", 1000),
 		InitialDegrees: GetEnviromentVariableFloat("VULCANO_INITIAL_DEGREES", 90),
 		Clockwise:      GetEnviromentVariableBool("VULCANO_CLOCKWISE", false)}
-	solarSystem.Vulcano.CalcAngularVelocity()
 
 	solarSystem.CalcYearsWheather(GetEnviromentVariableInt("PRE_CALCULATED_YEARS", 10))
 
